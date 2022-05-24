@@ -2,9 +2,14 @@
 getCurrentUser()
 getUsersFromBD()
 
+const editModal = $.modal()
 const newUserForm = document.getElementById("newUserForm");
 newUserForm.addEventListener("submit", handleFormSubmit);
 
+async function getUserById(id) {
+    let promise = await fetch("http://localhost:8080/index-page/getUser/" + id)
+    return await promise.json();
+}
 
 async function getCurrentUser() {
     let promise = await fetch("http://localhost:8080/index-page/getCurrentUser")
@@ -18,10 +23,7 @@ async function getCurrentUser() {
 
 
     nava.innerHTML = "<b><span>" + `${user.email}` + "</span></b> with roles:<span>" + `${roles}` + "</span>";
-    document.querySelector('.navigation-bar').onchange = function () {
-        var navaupdate = nava.value;
-        updateDisplay(nav)
-    }
+
     let table = document.getElementById("infoUser")
     table.innerHTML += "<tr>" +
         "<td>" + user['id'] + "</td>" +
@@ -35,11 +37,10 @@ async function getCurrentUser() {
 }
 
 async function getUsersFromBD() {
-    let promise = await fetch("http://localhost:8080/index-page/getAllUsers")
-    promise.json()
+    let getAllUserPromise = await fetch("http://localhost:8080/index-page/getAllUsers")
+    getAllUserPromise.json()
         .then(users => {
             let table = document.getElementById("userlist")
-
             for (let i = 0; i < users.length; i++) {
                 table.innerHTML += "<tr></tr>"
                 let tr = table.getElementsByTagName("tr")[i];
@@ -58,10 +59,10 @@ async function getUsersFromBD() {
 
 
                 tr.innerHTML += "<td>\n" +
-                    "<a type=\"button\" class=\"btn btn-sm btn-info\"\n " +
+                    "<a type=\"button\" class=\"edit-btn btn-sm btn-info\"\n " +
                     "id=\"editButton\"\n" +
                     "data-bs-toggle=\"modal\"\n" +
-                    "href=\"#editFORM" + users[i]['id'] + "\">\n" +
+                    "data-userid=\"" + users[i]['id'] + "\">\n" +
                     "Edit\n" +
                     "</a>\n" +
                     "</td>\n" +
@@ -74,8 +75,6 @@ async function getUsersFromBD() {
                     "Delete\n" +
                     "</a>\n" +
                     "</td>";
-                editUser(users[i]);
-                deleteUser(users[i]);
             }
         })
         .catch(error => {
@@ -83,6 +82,11 @@ async function getUsersFromBD() {
         })
         .finally(() => {
         })
+}
+
+const editButtons = document.querySelector('.edit-btn')
+const handleClick = (event) => {
+    editUser(getUserById(parseInt(event.target.dataset.userid)));
 }
 
 function editUser(user) {
@@ -105,7 +109,7 @@ function editUser(user) {
         user_check = "checked";
     }
 
-    editForm.innerHTML += "<div class=\"modal fade\" id=\"editFORM" + user['id'] + "\"\n" +
+    editForm.outerHTML("<div class=\"modal fade\" id=\"editFORM\\" +
         "                                                             tabindex=\"-1\"\n" +
         "                                                             aria-labelledby=\"editModalLabel\"\n" +
         "                                                             aria-hidden=\"true\">\n" +
@@ -205,7 +209,7 @@ function editUser(user) {
         "             </form>" +
         "                                                              </div>\n" +
         "             </div>\n" +
-        "                                                        </div>\n";
+        "                                                        </div>\n")
 
 
 }
@@ -228,7 +232,7 @@ function deleteUser(user) {
         user_check = "checked";
     }
 
-    deleteForm.innerHTML += "<div class=\"modal fade\" id=\"deleteFORM" + user['id'] + "\"\n" +
+    deleteForm.insertAdjacentHTML("afterbegin", "<div class=\"modal fade\" id=\"deleteFORM" + user['id'] + "\"\n" +
         "                                                             tabindex=\"-1\"\n" +
         "                                                             aria-labelledby=\"deleteModalLabel\"\n" +
         "                                                             aria-hidden=\"true\">\n" +
@@ -324,7 +328,7 @@ function deleteUser(user) {
         "                                                                    </form>\n" +
         "                                                                </div>\n" +
         "                                                            </div>\n" +
-        "                                                        </div>";
+        "                                                        </div>")
 
 }
 
