@@ -1,46 +1,12 @@
-"use strict"
-getCurrentUser()
 getUsersFromBD()
 
-const editModal = $.modal()
-const newUserForm = document.getElementById("newUserForm");
-newUserForm.addEventListener("submit", handleFormSubmit);
-
-async function getUserById(id) {
-    let promise = await fetch("http://localhost:8080/index-page/getUser/" + id)
-    return await promise.json();
-}
-
-async function getCurrentUser() {
-    let promise = await fetch("http://localhost:8080/index-page/getCurrentUser")
-    let user = await promise.json();
-
-    let roles = "";
-    for (let i = 0; i < user.authorities.length; i++) {
-        roles += user.authorities[i].role + " ";
-    }
-    var nava = document.querySelector('.navigation-bar');
-
-
-    nava.innerHTML = "<b><span>" + `${user.email}` + "</span></b> with roles:<span>" + `${roles}` + "</span>";
-
-    let table = document.getElementById("infoUser")
-    table.innerHTML += "<tr>" +
-        "<td>" + user['id'] + "</td>" +
-        "<td>" + user['name'] + "</td>" +
-        "<td>" + user['lastname'] + "</td>" +
-        "<td>" + user['age'] + "</td>" +
-        "<td>" + user['email'] + "</td>" +
-        "<td>" + roles + "</td>" +
-        "</tr>";
-
-}
 
 async function getUsersFromBD() {
-    let getAllUserPromise = await fetch("http://localhost:8080/index-page/getAllUsers")
-    getAllUserPromise.json()
+    let promise = await fetch("http://localhost:8080/index-page/GET/user/all")
+    promise.json()
         .then(users => {
             let table = document.getElementById("userlist")
+
             for (let i = 0; i < users.length; i++) {
                 table.innerHTML += "<tr></tr>"
                 let tr = table.getElementsByTagName("tr")[i];
@@ -59,10 +25,10 @@ async function getUsersFromBD() {
 
 
                 tr.innerHTML += "<td>\n" +
-                    "<a type=\"button\" class=\"edit-btn btn-sm btn-info\"\n " +
+                    "<a type=\"button\" class=\"btn btn-sm btn-info\"\n " +
                     "id=\"editButton\"\n" +
                     "data-bs-toggle=\"modal\"\n" +
-                    "data-userid=\"" + users[i]['id'] + "\">\n" +
+                    "href=\"#editFORM" + users[i]['id'] + "\">\n" +
                     "Edit\n" +
                     "</a>\n" +
                     "</td>\n" +
@@ -75,6 +41,8 @@ async function getUsersFromBD() {
                     "Delete\n" +
                     "</a>\n" +
                     "</td>";
+                editUser(users[i]);
+                deleteUser(users[i]);
             }
         })
         .catch(error => {
@@ -82,11 +50,6 @@ async function getUsersFromBD() {
         })
         .finally(() => {
         })
-}
-
-const editButtons = document.querySelector('.edit-btn')
-const handleClick = (event) => {
-    editUser(getUserById(parseInt(event.target.dataset.userid)));
 }
 
 function editUser(user) {
@@ -109,7 +72,7 @@ function editUser(user) {
         user_check = "checked";
     }
 
-    editForm.outerHTML("<div class=\"modal fade\" id=\"editFORM\\" +
+    editForm.innerHTML += "<div class=\"modal fade\" id=\"editFORM" + user['id'] + "\"\n" +
         "                                                             tabindex=\"-1\"\n" +
         "                                                             aria-labelledby=\"editModalLabel\"\n" +
         "                                                             aria-hidden=\"true\">\n" +
@@ -209,7 +172,7 @@ function editUser(user) {
         "             </form>" +
         "                                                              </div>\n" +
         "             </div>\n" +
-        "                                                        </div>\n")
+        "                                                        </div>\n";
 
 
 }
@@ -232,7 +195,7 @@ function deleteUser(user) {
         user_check = "checked";
     }
 
-    deleteForm.insertAdjacentHTML("afterbegin", "<div class=\"modal fade\" id=\"deleteFORM" + user['id'] + "\"\n" +
+    deleteForm.innerHTML += "<div class=\"modal fade\" id=\"deleteFORM" + user['id'] + "\"\n" +
         "                                                             tabindex=\"-1\"\n" +
         "                                                             aria-labelledby=\"deleteModalLabel\"\n" +
         "                                                             aria-hidden=\"true\">\n" +
@@ -328,48 +291,7 @@ function deleteUser(user) {
         "                                                                    </form>\n" +
         "                                                                </div>\n" +
         "                                                            </div>\n" +
-        "                                                        </div>")
+        "                                                        </div>";
 
 }
 
-async function postFormDataAsJson({url, formData}) {
-    const plainFormData = Object.fromEntries(formData.entries());
-    const formDataJsonString = JSON.stringify(plainFormData);
-
-    const fetchOptions = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-        },
-        body: formDataJsonString,
-    };
-
-    const response = await fetch(url, fetchOptions);
-
-    if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(errorMessage);
-    }
-    if (response.ok) {
-        alert("Пользователь успешно добавлен");
-        getUsersFromBD();
-    }
-    return response.json();
-}
-
-async function handleFormSubmit(event) {
-    event.preventDefault();
-
-    const form = event.currentTarget;
-    const url = form.action;
-
-    try {
-        const formData = new FormData(form);
-        const responseData = await postFormDataAsJson({url, formData});
-
-        console.log({responseData});
-    } catch (error) {
-        console.error(error);
-    }
-}
